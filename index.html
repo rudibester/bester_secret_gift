@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family Secret Santa</title>
+<style>
+:root{--bg:#e9f0ea;--card:#fbfdfb;--ink:#14261f;--mute:#566b61;--line:#c5d4c9;--acc:#a8123a;--accink:#fff;--gold:#b58300}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1a15;--card:#17261f;--ink:#eaf2ec;--mute:#9db2a6;--line:#2c4237;--acc:#e0527a;--accink:#1a0a10;--gold:#e0b341}}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:20px 16px 48px}
+main{max-width:620px;margin:0 auto}
+h1{font:700 clamp(2rem,7vw,3rem)/1.05 Georgia,"Times New Roman",serif;margin:8px 0 6px;letter-spacing:-.02em}
+h2{font:700 1.3rem/1.2 Georgia,serif;margin:0 0 10px}
+p{margin:0 0 10px}.mute{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin:16px 0}
+.gift{border-left:6px solid var(--acc)}.funny{border-left:6px solid var(--gold)}
+label{display:block;font-weight:600;margin:12px 0 4px}
+select,input{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px}
+button{font:inherit;font-weight:600;cursor:pointer;border-radius:6px;border:1px solid var(--acc);background:var(--acc);color:var(--accink);padding:10px 16px;margin-top:14px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.big{font:700 clamp(2rem,9vw,3.2rem)/1.1 Georgia,serif;color:var(--acc);margin:6px 0}
+.err{color:var(--acc);font-weight:600}.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>Family Secret Santa</h1>
+<p class="mute">Two swaps this year: one gift for one person, and one funny gift for the pile.</p>
+
+<div class="card">
+  <h2>Find out who you’re buying for</h2>
+  <label for="who">Your name</label>
+  <select id="who"></select>
+  <label for="pin">Your PIN</label>
+  <input id="pin" inputmode="numeric" autocomplete="off" maxlength="12">
+  <button id="go">Reveal my person</button>
+  <p id="err" class="err"></p>
+</div>
+<div id="result" class="card hide">
+  <p class="mute" id="hello"></p>
+  <p>You are buying a gift for</p>
+  <div class="big" id="to"></div>
+  <p class="mute">Keep it secret. Don’t show anyone this screen.</p>
+</div>
+
+<div class="card gift"><h2>1. The Secret Santa gift</h2>
+  <p>You get one name and buy one gift for that person, up to <b>R150</b>. Keep who you drew a secret until the gifts are opened. Couples can’t draw each other, and nobody draws themselves.</p></div>
+<div class="card funny"><h2>2. The funny swap</h2>
+  <p>Everyone also brings one wrapped gift worth up to <b>R50</b>. It should be funny and odd, and it is <b>not</b> for anyone in particular. Think silly, strange or useless. All the gifts go into one pile and are swapped on the day, so wrap it well and don’t put your name on it.</p></div>
+</main>
+<script>
+const DATA=[{"n":"Rudi","s":"YaHo1onYPY/cVsIuQDQpnw==","i":"Z88nrX26olOj3eq5","c":"Gtj51OQeEILWEfUdX/OSRC+B1NnYF1E21KPOqmAUW8eZnKY="},{"n":"Melissa","s":"cPwaS4zxceLQKggHVEoq6w==","i":"2/FYFcYH576wTGoV","c":"V9i4YWrwOOMcRfBkpNF3zGJPAsgmmSNiVS8LKomp"},{"n":"Pieter Snr","s":"typMxDLERKFVKB4qT8g+5w==","i":"JkGfH0x6/jI3caiC","c":"pemD3GXEfc7AmllmMgyFT27JG3Km6ezKX2OhpV/7nspxZKk="},{"n":"Karin","s":"ns5gRrmP4U/gQZ2hhPR+jw==","i":"MnNoQsX9Wylnztph","c":"9oTJL3fyxklnlcqumyJYaTbZiMVNN50dwLUH5UfBfLY="},{"n":"Pieter Jnr","s":"ZAPv1Ap/OGByGnbhOt5CuQ==","i":"hbH2RpXS1sT9OYHV","c":"lixgPb5TT15z/cYGHTUr0jvMm8n+T/u+bdF/Zcs="},{"n":"Mia","s":"LWUF4VRB1wHPX7aiOaH4jw==","i":"2H8QnqJGMXa7qlCR","c":"z7zL0ViAX/p+3mcWn5QAX9iUQVbktNJhEGuUTZQ2"},{"n":"Simon","s":"ohcuy2M3cVHtuDAeGlV1WQ==","i":"eqoFL5KwNjS0WpvS","c":"uOmTuHCgk/3In0akrR+JG/PUBQAbwNKVD34ahQ=="}];
+const $=id=>document.getElementById(id);
+const u=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+DATA.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=d.n;$('who').appendChild(o);});
+$('go').onclick=async()=>{
+  $('err').textContent='';$('result').classList.add('hide');
+  const d=DATA[$('who').value];
+  try{
+    const km=await crypto.subtle.importKey('raw',new TextEncoder().encode($('pin').value.trim()),'PBKDF2',false,['deriveKey']);
+    const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:u(d.s),iterations:150000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:u(d.i)},k,u(d.c));
+    $('hello').textContent='Hi '+d.n+'!';
+    $('to').textContent=JSON.parse(new TextDecoder().decode(pt)).to;
+    $('result').classList.remove('hide');
+  }catch(e){$('err').textContent='That name and PIN don’t match. Check both and try again.';}
+};
+$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')$('go').click();});
+</script>
+</body>
+</html>
